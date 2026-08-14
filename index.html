@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>승초딩 미연시 — 막차, 그리고 너</title>
+<style>
+  :root{ --bg1:#1a2438; --bg2:#0e1524; --panel:rgba(15,20,32,.85); --accent:#7aa2ff; --heart:#ff6b8a; --text:#eef2fb; --sub:#9fb0cf; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:#05070d; color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh;}
+  #game{position:relative; width:min(460px,100vw); height:min(840px,100vh); background:linear-gradient(180deg,var(--bg1),var(--bg2)); overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  #topbar{position:absolute; top:0; left:0; right:0; z-index:5; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(180deg,rgba(0,0,0,.45),transparent);}
+  #place{font-size:12.5px; color:var(--sub)} #place b{color:#8fe08f}
+  #affwrap{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.92); padding:6px 12px; border-radius:20px; color:#333; font-size:12px; font-weight:700}
+  #heart{color:var(--heart); font-size:15px}
+  #affbar{width:88px; height:8px; background:#e6d6dc; border-radius:6px; overflow:hidden}
+  #afffill{height:100%; width:0%; background:linear-gradient(90deg,#ffb0c0,var(--heart)); transition:width .5s}
+  #stage{position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center;}
+  #charWrap{width:82%; max-width:360px; margin-bottom:250px; transition:transform .3s, filter .3s; filter:drop-shadow(0 8px 24px rgba(0,0,0,.4))}
+  #charWrap.enter{animation:pop .5s ease}
+  @keyframes pop{from{transform:translateY(20px) scale(.96);opacity:.4}to{transform:none;opacity:1}}
+  #charImg{width:100%; display:none}
+  #charSvg .cheek{opacity:0; transition:opacity .5s}
+  #game.warm #charSvg .cheek{opacity:.8}
+  #announce{position:absolute; top:52px; left:0; right:0; z-index:8; display:flex; justify-content:center; pointer-events:none}
+  #announce span{background:rgba(20,30,50,.92); border:1px solid rgba(122,162,255,.4); color:#cfe0ff; font-size:13px; font-weight:700; padding:8px 18px; border-radius:20px; box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  #announce.show{animation:announce 2.6s ease}
+  @keyframes announce{0%{opacity:0;transform:translateY(-12px)}12%,80%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-8px)}}
+  .lights{position:absolute; bottom:270px; right:16px; display:flex; gap:14px; opacity:.5}
+  .lights i{width:8px; height:34px; border-radius:3px; background:linear-gradient(180deg,#ffd98a,#8a6a2a); display:block}
+  #dlg{position:absolute; left:0; right:0; bottom:0; z-index:6; padding:16px; background:linear-gradient(180deg,transparent,rgba(5,7,13,.6) 18%);}
+  #panel{background:var(--panel); backdrop-filter:blur(6px); border:1px solid rgba(122,162,255,.25); border-radius:16px; padding:14px 18px 18px; min-height:158px; position:relative}
+  #speakerRow{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px}
+  #speaker{display:inline-block; font-weight:800; font-size:14px; color:var(--accent); background:rgba(122,162,255,.14); padding:4px 12px; border-radius:12px}
+  #speaker.narr{color:var(--sub); background:rgba(159,176,207,.12)}
+  #meta{font-size:11px; color:var(--sub)}
+  #text{font-size:15.5px; line-height:1.72; min-height:50px; white-space:pre-wrap}
+  #choices{display:flex; flex-direction:column; gap:8px; margin-top:14px}
+  .choice{display:flex; align-items:center; gap:10px; background:rgba(122,162,255,.1); border:1px solid rgba(122,162,255,.35); color:var(--text); padding:11px 13px; border-radius:12px; font-size:14px; text-align:left; cursor:pointer; transition:.15s; font-family:inherit}
+  .choice:hover{background:rgba(122,162,255,.24); transform:translateX(3px)}
+  .tag{flex:none; font-size:11px; font-weight:700; padding:3px 9px; border-radius:9px; background:rgba(122,162,255,.25); color:#cfe0ff}
+  .tag.warm{background:rgba(255,150,170,.22); color:#ffc4d0}
+  .tag.calm{background:rgba(150,200,180,.2); color:#bfe8d6}
+  .tag.fun{background:rgba(255,210,120,.2); color:#ffe0a0}
+  #next{position:absolute; right:16px; bottom:12px; color:var(--accent); font-size:12px; animation:blink 1.1s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .screen{position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:34px; background:linear-gradient(180deg,rgba(10,16,30,.72),rgba(5,7,13,.94))}
+  .screen h1{font-size:27px; letter-spacing:.5px; margin-bottom:10px; line-height:1.3}
+  .screen p{color:var(--sub); font-size:14px; line-height:1.85; margin-bottom:24px}
+  .btn{background:linear-gradient(90deg,#7aa2ff,#9a7aff); color:#fff; border:none; padding:14px 34px; border-radius:26px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 8px 24px rgba(122,162,255,.4)}
+  .btn:hover{filter:brightness(1.08)}
+  .hidden{display:none !important}
+  .end-emoji{font-size:46px; margin-bottom:6px}
+  .end-badge{font-size:12px; color:var(--accent); letter-spacing:1px; margin-bottom:14px; font-weight:700}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="title" class="screen">
+    <div style="font-size:13px;letter-spacing:3px;color:#7aa2ff;font-weight:700;margin-bottom:10px">승초딩 미연시</div>
+    <h1>막차, 그리고 너</h1>
+    <p>새벽 1시 30분, 군자역으로 향하는 5호선 막차.<br>맞은편에 앉은 이름 모를 그 사람.<br>오늘 밤, 당신의 선택이 이야기를 만듭니다.</p>
+    <button class="btn" onclick="startGame()">시작하기 ♡</button>
+  </div>
+
+  <div id="topbar" class="hidden">
+    <div id="place"><span id="prevSt">답십리</span> · <b id="curSt">장한평</b> · <span id="nextSt">군자</span></div>
+    <div id="affwrap"><span id="heart">♥</span><div id="affbar"><div id="afffill"></div></div><span id="affnum">0%</span></div>
+  </div>
+
+  <div id="announce" class="hidden"><span id="announceTxt"></span></div>
+
+  <div id="stage" class="hidden">
+    <div class="lights"><i></i><i></i><i></i><i></i></div>
+    <div id="charWrap">
+      <!-- 생성한 캐릭터 그림을 넣으려면: 아래 CHAR_IMG 설정에 파일 경로만 채우면 됩니다. -->
+      <img id="charImg" alt="character">
+      <svg id="charSvg" viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skin" x1="0" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#f9dcc2"/><stop offset="1" stop-color="#f0c9a4"/></linearGradient>
+          <linearGradient id="hair" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#33261f"/><stop offset="1" stop-color="#1a1210"/></linearGradient>
+          <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2b30"/><stop offset="1" stop-color="#161619"/></linearGradient>
+          <radialGradient id="cheekg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#f0708c" stop-opacity="0.85"/><stop offset="1" stop-color="#f0708c" stop-opacity="0"/></radialGradient>
+          <radialGradient id="irisL" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#6b4a34"/><stop offset="0.6" stop-color="#3f2a1c"/><stop offset="1" stop-color="#241610"/></radialGradient>
+          <clipPath id="eyeLclip"><path d="M229,308 C243,288 273,288 285,305 C274,320 244,322 229,308 Z"/></clipPath>
+          <clipPath id="eyeRclip"><path d="M371,308 C357,288 327,288 315,305 C326,320 356,322 371,308 Z"/></clipPath>
+        </defs>
+        <path fill="url(#hair)" d="M172,380 C138,170 205,58 300,58 C395,58 462,170 428,380 C418,320 300,300 172,380 Z"/>
+        <path fill="url(#skin)" d="M270,468 C267,505 267,520 270,532 L330,532 C333,520 333,505 330,468 C318,482 282,482 270,468 Z"/>
+        <path fill="url(#coat)" d="M140,700 C140,585 205,540 265,528 L300,570 L335,528 C395,540 460,585 460,700 Z"/>
+        <path fill="#b9b3ac" d="M300,528 L270,548 L282,700 L318,700 L330,548 Z"/>
+        <path fill="#ffffff" d="M300,532 L284,544 L292,600 L308,600 L316,544 Z"/>
+        <path fill="#0e0e10" d="M265,528 C258,560 256,640 258,700 L232,700 C230,620 236,560 250,532 Z"/>
+        <path fill="#0e0e10" d="M335,528 C342,560 344,640 342,700 L368,700 C370,620 364,560 350,532 Z"/>
+        <path fill="url(#skin)" d="M196,300 C180,304 179,334 196,344 C204,341 203,318 201,306 Z"/>
+        <path fill="url(#skin)" d="M404,300 C420,304 421,334 404,344 C396,341 397,318 399,306 Z"/>
+        <path fill="url(#skin)" d="M300,168 C242,170 209,206 204,262 C201,304 208,346 226,384 C244,424 276,472 300,486 C324,472 356,424 374,384 C392,346 399,304 396,262 C391,206 358,170 300,168 Z"/>
+        <ellipse class="cheek" cx="246" cy="372" rx="27" ry="18" fill="url(#cheekg)"/>
+        <ellipse class="cheek" cx="354" cy="372" rx="27" ry="18" fill="url(#cheekg)"/>
+        <path fill="#2e211b" d="M223,276 C244,267 270,268 286,276 C270,272 246,272 225,282 Z"/>
+        <path fill="#2e211b" d="M377,276 C356,267 330,268 314,276 C330,272 354,272 375,282 Z"/>
+        <path fill="#fbfbfb" d="M229,308 C243,288 273,288 285,305 C274,320 244,322 229,308 Z"/>
+        <g clip-path="url(#eyeLclip)"><circle cx="259" cy="306" r="18" fill="url(#irisL)"/><circle cx="259" cy="306" r="7.5" fill="#140d09"/><circle cx="264" cy="300" r="4.5" fill="#fff"/></g>
+        <path fill="none" stroke="#1c120c" stroke-width="4" stroke-linecap="round" d="M229,306 C243,287 274,287 286,303"/>
+        <path fill="#fbfbfb" d="M371,308 C357,288 327,288 315,305 C326,320 356,322 371,308 Z"/>
+        <g clip-path="url(#eyeRclip)"><circle cx="341" cy="306" r="18" fill="url(#irisL)"/><circle cx="341" cy="306" r="7.5" fill="#140d09"/><circle cx="346" cy="300" r="4.5" fill="#fff"/></g>
+        <path fill="none" stroke="#1c120c" stroke-width="4" stroke-linecap="round" d="M371,306 C357,287 326,287 314,303"/>
+        <path fill="#e2ac82" opacity="0.45" d="M298,320 C295,350 290,368 300,378 C302,366 302,344 302,322 Z"/>
+        <path fill="#e2ac82" opacity="0.4" d="M290,378 C296,386 308,386 312,378 C306,384 296,384 290,378 Z"/>
+        <path fill="#d98a80" d="M276,424 C284,418 291,418 300,422 C309,418 316,418 324,424 C316,422 308,423 300,425 C292,423 284,422 276,424 Z"/>
+        <path fill="#e29a8e" d="M278,426 C288,437 312,437 322,426 C312,433 288,433 278,426 Z"/>
+        <path fill="url(#hair)" d="M210,158 C200,222 204,286 216,338 C212,286 220,224 248,178 C236,166 222,160 210,158 Z"/>
+        <path fill="url(#hair)" d="M390,158 C400,222 396,286 384,338 C388,286 380,224 352,178 C364,166 378,160 390,158 Z"/>
+        <path fill="url(#hair)" d="M300,118 C256,112 218,132 206,182 C202,200 210,208 224,202 C246,192 268,186 288,190 C297,192 300,184 300,170 Z"/>
+        <path fill="url(#hair)" d="M300,118 C344,112 382,132 394,182 C398,200 390,208 376,202 C354,192 332,186 312,190 C303,192 300,184 300,170 Z"/>
+        <path fill="url(#hair)" d="M300,110 C246,108 202,138 196,190 C214,150 250,128 300,128 C350,128 386,150 404,190 C398,138 354,108 300,110 Z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div id="dlg" class="hidden">
+    <div id="panel">
+      <div id="speakerRow"><span id="speaker" class="narr">나레이션</span><span id="meta"></span></div>
+      <div id="text"></div>
+      <div id="choices"></div>
+      <span id="next" class="hidden">▼ 탭</span>
+    </div>
+  </div>
+
+  <div id="ending" class="screen hidden">
+    <div class="end-emoji" id="endEmoji">♡</div>
+    <div class="end-badge" id="endBadge"></div>
+    <h1 id="endTitle"></h1>
+    <p id="endText"></p>
+    <button class="btn" onclick="location.reload()">다시 하기</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   [ 캐릭터 그림 넣기 ]
+   생성한 캐릭터 이미지를 game.html 옆 assets/char/ 폴더에 넣고
+   아래 경로만 채우면 SVG 대신 그림이 표시됩니다. (비워두면 기본 SVG)
+   표정별 파일을 만들면 장면마다 자동으로 바뀝니다.
+========================================================= */
+const CHAR_IMG = {
+  normal:   "",   // 예: "assets/char/normal.png"
+  smile:    "",   // 예: "assets/char/smile.png"
+  surprise: "",
+  blush:    "",
+  sad:      "",
+};
+
+/* =========================================================
+   [ 스토리 ] 여기만 고치면 이야기가 바뀝니다.
+   장면: { speaker, text, meta?, expr?, next? , choices?[] , end? }
+   choices: { tag, tone, label, aff, set?, next }
+     - aff: 호감도 증감   - set: 플래그 저장(예: {supported:true})
+========================================================= */
+const SCENES = {
+  a1:{ speaker:"나레이션", meta:"2026.05.23 · 새벽 1:30 · 5호선", expr:"normal", station:{prev:"마장", cur:"답십리", next:"장한평", say:"이번 역은 답십리, 답십리역입니다."},
+    text:"군자역으로 향하는 막차. 그는 1-1칸 오른쪽 문 끝자리에 앉아 카트라이더를 켜고 있었다.\n손끝은 자꾸 미끄러졌고, 플래티넘 1 승급전은 또 무너졌다.", next:"a2" },
+  a2:{ speaker:"나레이션", expr:"normal",
+    text:"텅 빈 새벽 열차. 맞은편엔 그 사람뿐. 카트가 벽에 부딪히는 걸, 나도 모르게 지켜보고 있었다.", next:"a3" },
+  a3:{ speaker:"나", text:"…말을 걸어볼까, 그냥 모른 척할까.", choices:[
+      { tag:"다정하게", tone:"warm", label:"\"혹시… 카트라이더 승급전이에요?\"", aff:12, next:"b1a" },
+      { tag:"조용히", tone:"calm", label:"조용히 그의 플레이를 지켜본다", aff:4, next:"b1b" },
+      { tag:"장난스럽게", tone:"fun", label:"\"아, 방금 벽에 박으셨다…\"", aff:8, set:{gag:true}, next:"b1c" },
+    ]},
+  b1a:{ speaker:"이름 모를 그", expr:"surprise", text:"(움찔) …네? 아, 네. 승급전인데 자꾸 미끄러지네요. 혹시… 하세요?", next:"b2" },
+  b1b:{ speaker:"이름 모를 그", expr:"normal", text:"(시선을 느꼈는지 고개를 든다) …제가 그렇게 못하나요? 하하.", next:"b2" },
+  b1c:{ speaker:"이름 모를 그", expr:"smile", text:"(픽 웃는다) 보셨어요…? 아, 창피하다. 오늘 진짜 안 되네요.", next:"b2" },
+  b2:{ speaker:"나", text:"승급전이면 지금 엄청 떨리겠네요.", choices:[
+      { tag:"다정하게", tone:"warm", label:"\"제가 옆에서 응원해도 돼요?\"", aff:14, next:"c1" },
+      { tag:"장난스럽게", tone:"fun", label:"\"사실 저 다이아예요. 한 수 알려드려요?\"", aff:10, set:{gag:true}, next:"c1" },
+      { tag:"조용히", tone:"calm", label:"말없이 고개를 끄덕인다", aff:3, next:"c1" },
+    ]},
+  c1:{ speaker:"나레이션", expr:"normal", station:{prev:"답십리", cur:"장한평", next:"군자", say:"다음 역은 군자, 군자역입니다. 내리실 문은 오른쪽입니다."},
+    text:"몇 판을 함께 마음 졸이는 사이, 그가 폰을 내려놓았다. 그의 손끝에서 옅은 스타일링 제품 냄새가 났다.\n문득, 그가 조심스레 입을 열었다.", next:"c2" },
+  c2:{ speaker:"이름 모를 그", expr:"sad", meta:"헤어디자이너 · 오른쪽 볼의 작은 점",
+    text:"사실 저… 미용실 해요. 헤어디자이너요. 대학 다니다 그만두고 이 길로 왔는데…\n가끔은 이게 맞는 선택이었나, 밤마다 그런 생각이 들어요.", next:"c3" },
+  c3:{ speaker:"나", text:"그의 눈빛이 잠깐 흔들렸다. 뭐라고 답할까.", choices:[
+      { tag:"다정하게", tone:"warm", label:"\"좋아하는 일을 택한 거잖아요. 충분히 멋있어요.\"", aff:16, set:{supported:true}, next:"d1" },
+      { tag:"장난스럽게", tone:"fun", label:"\"그럼 제 머리도 봐주세요, 원장님 ㅋㅋ\"", aff:10, set:{gag:true}, next:"d1" },
+      { tag:"조용히", tone:"calm", label:"\"…다들 그렇게 고민하며 살죠 뭐.\"", aff:-4, next:"d1" },
+    ]},
+  d1:{ speaker:"나레이션", expr:"normal", station:{prev:"장한평", cur:"군자", next:"아차산", say:"🚉 군자역에 도착했습니다.", arrive:true},
+    text:"열차가 군자역에 멈춰 선다. 문이 열리기 직전, 그가 무언가 결심한 듯 나를 바라봤다.", next:"d2" },
+  d2:{ speaker:"나", text:"내릴 시간이 다가온다. 마지막으로, 어떻게 할까.", choices:[
+      { tag:"다정하게", tone:"warm", label:"\"다음에도 이 시간에 여기서 볼 수 있을까요?\"", aff:8, next:"check" },
+      { tag:"웃으며", tone:"fun", label:"\"우리, 인스타라도 팔로우해요!\"", aff:6, set:{insta:true}, next:"check" },
+      { tag:"조용히", tone:"calm", label:"\"그럼, 조심히 들어가세요.\"", aff:0, next:"check" },
+    ]},
+};
+
+/* ===== 엔딩 정의 ===== */
+function pickEnding(aff, f){
+  if(aff < 18) return "normal";
+  if(f.insta && aff >= 30) return "insta";
+  if(f.supported && aff >= 50) return "reunion";
+  if(f.gag && aff >= 30) return "gag";
+  if(aff >= 45) return "premonition";
+  return "namecard";
+}
+const ENDINGS = {
+  insta:{ emoji:"💌", badge:"INSTA END", title:"@ 서로의 밤을 팔로우",
+    body:"\"제가 먼저 물어보려고 했는데.\" 그가 붉어진 얼굴로 화면을 내밀었다.<br>맞팔이 뜨는 순간 문이 닫혔고, 그는 끝까지 손을 흔들었다.<br>그날 밤, 서로의 피드에 조용히 좋아요가 눌렸다." },
+  reunion:{ emoji:"✂️💗", badge:"TRUE END", title:"머리, 하러 와요",
+    body:"그가 명함을 건넸다. \"다음 주 쉬는 날, 커트 예약 하나 비워둘게요.\"<br>\"…손님으로요?\" 묻자 그가 웃었다. \"아니요. 그냥, 또 보고 싶어서요.\"<br>대학을 떠나 택한 그의 길 위에, 당신이라는 새 이유가 하나 생겼다." },
+  gag:{ emoji:"😆", badge:"GAG END", title:"…원장님이었어?!",
+    body:"다음 날 오후, 예약해 둔 미용실 문을 열자—어제 그 사람이 가위를 들고 서 있었다.<br>\"어… 승급전 그분?!\" \"다이아라면서요. 오늘 앞머리 셀프컷 티 나던데.\"<br>결국 앞머리는 그의 손에 맡겨졌다. 운명은 가끔 이렇게 코믹하다." },
+  premonition:{ emoji:"🌙", badge:"NORMAL END", title:"또 만날 것 같은 예감",
+    body:"문이 닫히고 그의 뒷모습이 새벽 속으로 사라졌다.<br>이름도, 번호도 모른다. 그런데 이상하게—<br>다음 막차에서도, 그 자리에 그가 앉아 있을 것 같은 예감이 들었다." },
+  namecard:{ emoji:"✂️", badge:"OPEN END", title:"손에 남은 명함 한 장",
+    body:"그는 말없이 명함 한 장을 쥐여주고 내렸다. '헤어, 새벽 세 시.'<br>이상한 상호명이라고 생각하며 뒤집자, 뒷면에 작게 적혀 있었다.<br>'오늘 안 미끄러진 건, 아마 네 덕분.'" },
+  normal:{ emoji:"🌫️", badge:"BAD END", title:"스쳐 간 막차",
+    body:"\"…먼저 내릴게요.\" 짧은 인사와 함께 문이 닫혔다.<br>새벽 열차는 늘 그렇듯 무심히 다음 역으로 향했고,<br>오늘의 인연은 그저 스쳐 지나갔다." },
+};
+
+let affection = 0, flags = {};
+const $ = id => document.getElementById(id);
+
+function startGame(){
+  $("title").classList.add("hidden");
+  ["topbar","stage","dlg"].forEach(x=>$(x).classList.remove("hidden"));
+  $("charWrap").classList.add("enter");
+  render("a1");
+}
+function setAffection(delta){
+  affection = Math.max(0, Math.min(100, affection+delta));
+  $("afffill").style.width = affection+"%";
+  $("affnum").textContent = affection+"%";
+  $("game").classList.toggle("warm", affection>=40);
+}
+function setExpr(name){
+  const src = CHAR_IMG[name] || CHAR_IMG.normal;
+  if(src){ $("charImg").src = src; $("charImg").style.display="block"; $("charSvg").style.display="none"; }
+  else { $("charImg").style.display="none"; $("charSvg").style.display="block"; }
+}
+let typing=null;
+function typeText(str, done){
+  const el=$("text"); el.textContent=""; let i=0; clearInterval(typing);
+  typing=setInterval(()=>{ el.textContent += str[i++]||""; if(i>=str.length){ clearInterval(typing); done&&done(); } }, 20);
+}
+function showStation(st){
+  $("prevSt").textContent = st.prev; $("curSt").textContent = st.cur; $("nextSt").textContent = st.next;
+  if(st.say){
+    $("announceTxt").textContent = st.say;
+    const a=$("announce"); a.classList.remove("hidden","show"); void a.offsetWidth; a.classList.add("show");
+  }
+  if(st.arrive) $("game").classList.add("arrived");
+}
+function render(id){
+  if(id==="check") return ending();
+  const sc = SCENES[id];
+  if(sc.station) showStation(sc.station);
+  if(sc.expr) setExpr(sc.expr);
+  $("speaker").textContent = sc.speaker;
+  $("speaker").classList.toggle("narr", sc.speaker==="나레이션");
+  $("meta").textContent = sc.meta || "";
+  $("choices").innerHTML=""; $("next").classList.add("hidden"); $("panel").onclick=null;
+  typeText(sc.text, ()=>{
+    if(sc.choices){
+      sc.choices.forEach(c=>{
+        const b=document.createElement("button"); b.className="choice";
+        b.innerHTML = `<span class="tag ${c.tone||''}">${c.tag||'선택'}</span><span>${c.label}</span>`;
+        b.onclick=()=>{ setAffection(c.aff||0); if(c.set) Object.assign(flags,c.set); render(c.next); };
+        $("choices").appendChild(b);
+      });
+    } else if(sc.next){
+      $("next").classList.remove("hidden");
+      $("panel").onclick=()=>{ $("panel").onclick=null; render(sc.next); };
+    }
+  });
+}
+function ending(){
+  ["topbar","stage","dlg"].forEach(x=>$(x).classList.add("hidden"));
+  const e = ENDINGS[pickEnding(affection, flags)];
+  $("endEmoji").textContent = e.emoji;
+  $("endBadge").textContent = e.badge + "  ·  호감도 " + affection + "%";
+  $("endTitle").textContent = e.title;
+  $("endText").innerHTML = e.body;
+  $("ending").classList.remove("hidden");
+}
+</script>
+</body>
+</html>
